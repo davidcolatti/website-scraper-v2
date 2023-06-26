@@ -6,7 +6,7 @@ type Headers = Array<keyof ScrapedData>;
 
 export default (data: ScrapedData) => {
   const filePath = "./output.csv";
-  const headers: Headers = ["domain", "title", "phone"];
+  const headers: Headers = ["domain", "title", "phone", "email"];
 
   let writer: CsvWriteStream;
   if (!fs.existsSync(filePath)) {

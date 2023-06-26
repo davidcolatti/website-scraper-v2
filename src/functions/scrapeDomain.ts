@@ -3,11 +3,13 @@ import extractPhonesByUrl from "./extractPhonesByUrl";
 import requestUrl from "./requestUrl";
 import validateUsaPhone from "./validateUsaPhone";
 import writeCsv from "./writeCsv";
+import extractEmailsByUrl from "./extractEmailsByUrl";
 
 export interface ScrapedData {
   domain: string;
   title: string;
   phone: string;
+  email: string | null | undefined;
 }
 
 export default async (domain: string) => {
@@ -40,6 +42,13 @@ export default async (domain: string) => {
     return;
   }
 
+  let email = await extractEmailsByUrl(html, domain);
+  let isValidEmail = false;
+  if (email) {
+    const regex = /^[\w.%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    isValidEmail = regex.test(email);
+  }
+
   const $ = load(html);
 
   const title = $("title")
@@ -52,6 +61,7 @@ export default async (domain: string) => {
     domain: initalDomain,
     title,
     phone,
+    email: isValidEmail ? email?.toLocaleLowerCase() : "",
   };
 
   console.log(
