@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import extractPhonesByUrl from "./extractPhonesByUrl";
+import extractDataByUrl from "./extractDataByUrl";
 import requestUrl from "./requestUrl";
 import validateUsaPhone from "./validateUsaPhone";
 import writeCsv from "./writeCsv";
@@ -7,7 +7,8 @@ import writeCsv from "./writeCsv";
 export interface ScrapedData {
   domain: string;
   title: string;
-  phone: string;
+  phone: string | null;
+  email: string | null;
 }
 
 export default async (domain: string) => {
@@ -19,25 +20,24 @@ export default async (domain: string) => {
   const html = await requestUrl(domain);
   if (!html) return;
 
-  let phone = await extractPhonesByUrl(html, domain);
+  let { phone, email } = await extractDataByUrl(html, domain);
 
-  if (!phone) {
-    console.error(
-      JSON.stringify({ url: domain, error: "no phone number found" })
-    );
-    return;
+  if (phone) {
+    phone = validateUsaPhone(phone);
   }
 
-  phone = validateUsaPhone(phone);
-
-  if (!phone) {
+  if (!phone && !email) {
+    console.error(
+      JSON.stringify({ url: domain, error: "no phone or email found" })
+    );
+    return;
+  } else if (!phone) {
     console.error(
       JSON.stringify({
         url: domain,
         error: "phone number filtered out by validator",
       })
     );
-    return;
   }
 
   const $ = load(html);
@@ -52,6 +52,7 @@ export default async (domain: string) => {
     domain: initalDomain,
     title,
     phone,
+    email,
   };
 
   console.log(

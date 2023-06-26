@@ -1,6 +1,4 @@
 import { CheerioAPI, load } from "cheerio";
-import extractContactUrls from "./extractContactUrls";
-import requestUrl from "./requestUrl";
 
 const extractPhoneByAttrs = ($: CheerioAPI) => {
   const attrs = ["tel:", "callto:"];
@@ -18,7 +16,7 @@ const extractPhoneByAttrs = ($: CheerioAPI) => {
   return null;
 };
 
-const extractPhonesByHtml = (html: string) => {
+export default (html: string) => {
   const $ = load(html);
   const phone = extractPhoneByAttrs($);
 
@@ -40,23 +38,4 @@ const extractPhonesByHtml = (html: string) => {
   }
 
   return phone;
-};
-
-export default async (html: string, url: string) => {
-  try {
-    let phone = extractPhonesByHtml(html);
-    if (phone !== null) return phone;
-
-    const contactUrls = await extractContactUrls(html, url);
-    for (const contactUrl of [...new Set(contactUrls)]) {
-      const contactHtml = await requestUrl(contactUrl);
-      if (contactHtml !== null) {
-        phone = extractPhonesByHtml(contactHtml);
-        if (phone) return phone;
-      }
-    }
-  } catch (error: any) {
-    console.error(JSON.stringify({ url, error: error?.message || error }));
-  }
-  return null;
 };
