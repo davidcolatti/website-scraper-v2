@@ -25,10 +25,9 @@ const urls = fs.readFileSync(`domains.txt`).toString().split("\n");
       // evenly split the urls among the different workers
       const workerUrls = urls.splice(startIndex, threadCount);
 
-      const promises = workerUrls.map(scrapeDomain);
-      const result = await Promise.all(promises);
+      const results = await Promise.all(workerUrls.map(scrapeDomain));
 
-      console.log(`Found a total of ${result.length} domains`);
+      console.log(`Found a total of ${results.length} domains`);
       process.exit();
     }
   }
