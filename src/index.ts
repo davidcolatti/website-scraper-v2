@@ -3,6 +3,8 @@ import cluster from "cluster";
 import os from "os";
 import scrapeDomain from "./functions/scrapeDomain";
 
+const CHUNK_LIMIT = 400;
+
 const forks = os.cpus().length;
 const urls = fs.readFileSync(`domains.txt`).toString().split("\n");
 
@@ -25,9 +27,12 @@ const urls = fs.readFileSync(`domains.txt`).toString().split("\n");
       // evenly split the urls among the different workers
       const workerUrls = urls.splice(startIndex, threadCount);
 
-      const results = await Promise.all(workerUrls.map(scrapeDomain));
+      while (workerUrls.length > 0) {
+        const chunk = workerUrls.splice(0, CHUNK_LIMIT);
+        const response = await Promise.all(chunk.map(scrapeDomain));
+        console.log(`Chunk found a total of ${response.length} domains`);
+      }
 
-      console.log(`Found a total of ${results.length} domains`);
       process.exit();
     }
   }
